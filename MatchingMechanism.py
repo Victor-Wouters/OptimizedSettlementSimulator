@@ -97,9 +97,6 @@ def matching_duration(start_matching, end_matching, current_time, event_log):
         # Filter rows that match the condition
         instruction_ended_matching = start_matching[matching_condition].copy()
         
-        # Update the event log in bulk. This step assumes that Eventlog.Add_to_eventlog
-        # can be adapted to handle DataFrame inputs for bulk operations.
-        # This part of the code might need adjustment based on the actual implementation.
         if not instruction_ended_matching.empty:
             for _, row in instruction_ended_matching.iterrows():
                 event_log = Eventlog.Add_to_eventlog(event_log, row["Starttime"], current_time, row['TID'], activity='Matching')
@@ -116,9 +113,6 @@ def clear_queue_unmatched(queue_received, queue_1, time, event_log):
     # Concatenate queue_received and queue_1 in a more efficient manner
     queue_received = pd.concat([queue_received, queue_1], ignore_index=True)
     
-    # Assuming Eventlog.Add_to_eventlog can be modified to handle bulk operations,
-    # the following line is a placeholder for the bulk operation
-    # This assumes an adaptation of Add_to_eventlog to accept DataFrames and process them in bulk
     if not queue_1.empty:
         event_log = Eventlog.Add_to_eventlog(event_log, time, time, queue_1['TID'], activity='Waiting in queue received')
     
@@ -131,9 +125,6 @@ def clear_queue_received(queue_received, queue_1, time, event_log):
     # Concatenate queue_1 and queue_received in a more efficient manner
     queue_1 = pd.concat([queue_1, queue_received], ignore_index=True)
     
-    # Assuming Eventlog.Add_to_eventlog can be adapted for bulk operations,
-    # The following code assumes a bulk addition method to the event log is available or created.
-    # This placeholder for the bulk operation reduces overhead significantly.
     if not queue_received.empty:
         event_log = Eventlog.Add_to_eventlog(event_log, time, time, queue_received['TID'], activity='Waiting in queue unmatched')
     

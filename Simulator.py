@@ -7,6 +7,7 @@ import StatisticsOutput
 import LogPartData
 import SaveQueues
 import ClearQueus
+import FreezePart
 #import Generator
 import pandas as pd
 import datetime
@@ -96,19 +97,9 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         insert_transactions = transactions_entry[transactions_entry['Time']==time]     # Take all the transactions inserted on this minute
 
         if freeze and time_hour >= freeze_time:
-            insert_transactions = insert_transactions[(insert_transactions['FromParticipantId'] != freeze_part) & (insert_transactions['ToParticipantId'] != freeze_part)]
-            if time_hour == freeze_time:
-                queue_1 = queue_1[(queue_1['FromParticipantId'] != freeze_part) & (queue_1['ToParticipantId'] != freeze_part)]
-                start_validating = start_validating[(start_validating['FromParticipantId'] != freeze_part) & (start_validating['ToParticipantId'] != freeze_part)]
-                end_validating = end_validating[(end_validating['FromParticipantId'] != freeze_part) & (end_validating['ToParticipantId'] != freeze_part)]
-                start_matching = start_matching[(start_matching['FromParticipantId'] != freeze_part) & (start_matching['ToParticipantId'] != freeze_part)]
-                end_matching = end_matching[(end_matching['FromParticipantId'] != freeze_part) & (end_matching['ToParticipantId'] != freeze_part)]
-                start_checking_balance = start_checking_balance[(start_checking_balance['FromParticipantId'] != freeze_part) & (start_checking_balance['ToParticipantId'] != freeze_part)]
-                end_checking_balance = end_checking_balance[(end_checking_balance['FromParticipantId'] != freeze_part) & (end_checking_balance['ToParticipantId'] != freeze_part)]
-                start_again_checking_balance = start_again_checking_balance[(start_again_checking_balance['FromParticipantId'] != freeze_part) & (start_again_checking_balance['ToParticipantId'] != freeze_part)]
-                end_again_checking_balance = end_again_checking_balance[(end_again_checking_balance['FromParticipantId'] != freeze_part) & (end_again_checking_balance['ToParticipantId'] != freeze_part)]
-                queue_2 = queue_2[(queue_2['FromParticipantId'] != freeze_part) & (queue_2['ToParticipantId'] != freeze_part)]
 
+            insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, start_again_checking_balance, end_again_checking_balance, queue_2 = FreezePart.freeze_participant(time_hour, freeze_part, freeze_time, insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, start_again_checking_balance, end_again_checking_balance, queue_2)
+            
         
         cumulative_inserted = pd.concat([cumulative_inserted,insert_transactions], ignore_index=True)
         
@@ -127,11 +118,8 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         
         if time_hour == closing_time:       # Empty queue 1 at close and put in instructions received
             queue_received, queue_1, event_log = MatchingMechanism.clear_queue_unmatched(queue_received, queue_1, time, event_log)
-            queue_received, start_matching, event_log  = ClearQueus.clear_queue_to_queue_received(queue_received, start_matching, time, event_log)
-            queue_received, start_checking_balance, event_log  = ClearQueus.clear_queue_to_queue_received(queue_received, start_checking_balance, time, event_log)
-            queue_received, start_again_checking_balance, event_log  = ClearQueus.clear_queue_to_queue_received(queue_received, start_again_checking_balance, time, event_log)
-            queue_received, start_settlement_execution, event_log  = ClearQueus.clear_queue_to_queue_received(queue_received, start_settlement_execution, time, event_log)
-            queue_received, start_again_settlement_execution, event_log  = ClearQueus.clear_queue_to_queue_received(queue_received, start_again_settlement_execution, time, event_log)
+            
+            event_log, queue_received, start_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, queue_received, start_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution)
            
 
         if i % 900 == 0:
@@ -176,7 +164,7 @@ if __name__ == '__main__':
     credit_limit_percentage = 1.0
 
     # Freeze participant
-    freeze = False
+    freeze = True
     freeze_part = '41'
     freeze_time = datetime.time(14,00,00)
 
