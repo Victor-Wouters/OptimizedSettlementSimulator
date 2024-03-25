@@ -29,12 +29,14 @@ def balances_history_calculations(balances_history, participants):
     total_credit_dataframe = total_credit.to_frame().transpose()
     total_credit_dataframe = total_credit_dataframe.abs()
     credit_plot = total_credit_dataframe.iloc[0]
-    plt.figure(figsize=(20, 7))
+    plt.figure(figsize=(20, 9))
     plt.plot(credit_plot.index, credit_plot.values)
     plt.title('Total credit')
     plt.xlabel('Time')
     plt.ylabel('Value')
     plt.xticks(rotation=90)
+    #x_ticks = credit_plot.index[::4]
+    #plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'balanceHistoryPNG\\Total_credit.png')
@@ -59,7 +61,7 @@ def balances_history_calculations(balances_history, participants):
 
 
         dataframe.set_index('Time', inplace=True)
-        plt.figure(figsize=(20, 7))
+        plt.figure(figsize=(20, 9))
         for column in dataframe.columns[:-1]:  # Exclude the last column which is 'credit limit'
             if column == 0:
                 plt.plot(dataframe.index, dataframe[column], label=f'Cash account')
@@ -71,6 +73,8 @@ def balances_history_calculations(balances_history, participants):
         plt.ylabel('Value')
         plt.title(f'Participant {part_id}: Account Values Over Time')
         plt.xticks(rotation=90)
+        #x_ticks = dataframe.index[::4]
+        #plt.xticks(x_ticks, rotation=90)
         plt.grid(axis='y')
         plt.legend()
         #plt.grid(True)

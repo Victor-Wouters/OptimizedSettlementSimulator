@@ -29,7 +29,7 @@ def calculate_SE_per_participant(cumulative_inserted,settled_transactions):
         merged_df = pd.merge(settled_part, input_part, on='FromParticipantId', suffixes=('_settled', '_input'))
         merged_df['settled_input_ratio'] = merged_df['Value_settled'] / merged_df['Value_input']
         #merged_df['settled_input_ratio'] = merged_df['settled_input_ratio'].apply(lambda x: "{:.2%}".format(x))
-        plt.figure(figsize=(20, 7))
+        plt.figure(figsize=(20, 9))
         merged_df['FromParticipantId'] = merged_df['FromParticipantId'].astype(int)
         sorted_df = merged_df.sort_values(by='FromParticipantId')
         bars = plt.bar(sorted_df['FromParticipantId'], sorted_df['settled_input_ratio'], color='limegreen')
@@ -72,12 +72,14 @@ def calculate_total_value_unsettled(queue_2):
 def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, final_settlement_efficiency):
 
     unsettled_plot = total_unsettled_value_over_time.iloc[0]
-    plt.figure(figsize=(20, 7))
+    plt.figure(figsize=(20, 9))
     plt.plot(unsettled_plot.index, unsettled_plot.values)
     plt.title('Total unsettled value over time')
     plt.xlabel('Time')
     plt.ylabel('Value')
     plt.xticks(rotation=90)
+    #x_ticks = unsettled_plot.index[::4]
+    #plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'statisticsPNG\\total_unsettled_value_over_time.png')
@@ -89,6 +91,8 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, fi
     plt.xlabel('Time')
     plt.ylabel('Value')
     plt.xticks(rotation=90)
+    #x_ticks = SE_plot.index[::4]
+    #plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'statisticsPNG\\SE_over_time.png')

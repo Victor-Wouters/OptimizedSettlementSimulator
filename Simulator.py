@@ -99,7 +99,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         if freeze and time_hour >= freeze_time:
 
             insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, start_again_checking_balance, end_again_checking_balance, queue_2 = FreezePart.freeze_participant(time_hour, freeze_part, freeze_time, insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, start_again_checking_balance, end_again_checking_balance, queue_2)
-            
+
         
         cumulative_inserted = pd.concat([cumulative_inserted,insert_transactions], ignore_index=True)
         
@@ -121,23 +121,35 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
             
             event_log, queue_received, start_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, queue_received, start_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution)
            
-
         if i % 900 == 0:
             balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
-            time_hour_str = time_hour.strftime('%H:%M:%S')
-            balances_history[time_hour_str] = balances_status['Account Balance']
+            time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
+            
+            new_balance_col = pd.DataFrame({time_hour_str: balances_status['Account Balance']})
+            balances_history = pd.concat([balances_history, new_balance_col], axis=1)
+
             SE_timepoint = StatisticsOutput.calculate_SE_over_time(settled_transactions, cumulative_inserted)
-            SE_over_time[time_hour_str] = SE_timepoint['Settlement efficiency']
+            new_SE_col = pd.DataFrame({time_hour_str: SE_timepoint['Settlement efficiency']})
+            SE_over_time = pd.concat([SE_over_time, new_SE_col], axis=1)
+            
             total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
-            total_unsettled_value_over_time[time_hour_str] = total_unsettled_value_timepoint['Total value unsettled']
+            new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
+            total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
+
         if i == (total_seconds-1):
             balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
-            time_hour_str = time_hour.strftime('%H:%M:%S')
-            balances_history[time_hour_str] = balances_status['Account Balance']
+            time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
+            
+            new_balance_col = pd.DataFrame({time_hour_str: balances_status['Account Balance']})
+            balances_history = pd.concat([balances_history, new_balance_col], axis=1)
+
             SE_timepoint = StatisticsOutput.calculate_SE_over_time(settled_transactions, cumulative_inserted)
-            SE_over_time[time_hour_str] = SE_timepoint['Settlement efficiency']
+            new_SE_col = pd.DataFrame({time_hour_str: SE_timepoint['Settlement efficiency']})
+            SE_over_time = pd.concat([SE_over_time, new_SE_col], axis=1)
+            
             total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
-            total_unsettled_value_over_time[time_hour_str] = total_unsettled_value_timepoint['Total value unsettled']
+            new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
+            total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
 
 
     SaveQueues.save_queues(queue_1,queue_received,settled_transactions,queue_2)
