@@ -164,7 +164,9 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
 
     StatisticsOutput.statistics_generate_output(total_unsettled_value_over_time, SE_over_time, final_settlement_efficiency)
 
-    return max_credit, final_settlement_efficiency
+    max_unsettled_value = total_unsettled_value_over_time.iloc[0].max()
+
+    return max_credit, final_settlement_efficiency, max_unsettled_value
 
 if __name__ == '__main__':
 

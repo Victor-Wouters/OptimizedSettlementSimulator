@@ -11,11 +11,11 @@ if __name__ == '__main__':
 
     for i in range(1):
         print(f"-----run:{i}------------------")
-        amount_transactions = 8000#random.randint(5000,20000) # Amount of DVP transactions per day, x2 transactions/day
+        amount_transactions = 500#13500#random.randint(5000,10000) # Amount of DVP transactions per day, x2 transactions/day
         print(amount_transactions)
-        amount_participants = 150 #random.randint(50,200)
+        amount_participants =  4#60#random.randint(50,200)
         print(amount_participants)
-        amount_securities = 25#random.randint(10,25)
+        amount_securities = 3#8#random.randint(10,25)
         print(amount_securities)
         min_balance_value = 1000000
         max_balance_value = 10000000000
@@ -36,14 +36,14 @@ if __name__ == '__main__':
 
         Generator.generate_data(amount_transactions, amount_participants, amount_securities, min_balance_value, max_balance_value)
 
-        max_credit, final_settlement_efficiency = Simulator.simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
+        max_credit, final_settlement_efficiency, max_unsettled_value = Simulator.simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
 
         end_time = datetime.datetime.now()
         print("End Time:", end_time.strftime('%Y-%m-%d %H:%M:%S'))
         duration = end_time - start_time
         print("Execution Duration:", duration)
 
-        new_row = pd.DataFrame({"transactions DVP": [amount_transactions],"participants": [amount_participants],"securities": [amount_securities],"min bal": [min_balance_value],"max bal": [max_balance_value],"efficiency": [final_settlement_efficiency["Settlement efficiency"].iloc[0]],"max total credit": [max_credit]}, index=[0])
+        new_row = pd.DataFrame({"transactions DVP": [amount_transactions],"participants": [amount_participants],"securities": [amount_securities],"min bal": [min_balance_value],"max bal": [max_balance_value],"efficiency": [final_settlement_efficiency["Settlement efficiency"].iloc[0]],"max total credit": [max_credit], "Max unsettled value": [max_unsettled_value]}, index=[0])
         stats = pd.concat([stats, new_row], ignore_index=True)
         new_row.to_csv(f'RunSummaryRow{i}.csv', index=False, sep = ';')
     
