@@ -1,5 +1,5 @@
-import TransactionData
 import ParticipantData
+import TransactionDataParallel
 import pandas as pd
 import random
 import arrivals
@@ -37,7 +37,7 @@ def generate_data(amount_transactions, amount_participants, amount_securities, m
     #Generate participants
     balance_df = ParticipantData.generate_participant_data_modified(amount_participants, amount_securities, min_balance_value, max_balance_value)
     #Generate transactions
-    transaction_df = TransactionData.generate_transaction_data(amount_transactions, amount_participants, amount_securities, days_list, balance_df)
+    transaction_df = TransactionDataParallel.generate_transaction_data_parallel(amount_transactions, amount_participants, amount_securities, days_list, balance_df)
     #print(transaction_df)
     
     arrivals_list=arrivals.simulate_arrivals(transactions, start_year,start_month,start_day,end_year,end_month,end_day, arrival_factor_before_10, arrival_factor_after_4,arrival_factor_closed,arrival_factor_day )
@@ -48,7 +48,6 @@ def generate_data(amount_transactions, amount_participants, amount_securities, m
     
 
     #Export  as CSV
-    transaction_df.to_csv("InputData\\TRANSACTION1.csv", index=False, sep=';')
-    balance_df.to_csv("InputData\\PARTICIPANTS1.csv", index=False, sep=';')
+    #transaction_df.to_csv("TRANSACTION1.csv", index=False, sep=';')
+    #balance_df.to_csv("PARTICIPANTS1.csv", index=False, sep=';')
     #transaction_arrivals_df.to_csv("TRANSACTION_ARRIVALS.csv", index=False, sep=';')
-

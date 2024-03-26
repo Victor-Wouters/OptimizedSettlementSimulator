@@ -85,7 +85,18 @@ def settlement_execution(instructions_for_processing, participants):
 
 def keep_track_modified_accounts(instructions_for_processing, modified_accounts):
     for instruction in instructions_for_processing.itertuples(index=False):
-        modified_accounts[instruction.ToParticipantId] = instruction.ToAccountId
+        participant_id = instruction.ToParticipantId
+        account_id = instruction.ToAccountId
+
+        # If the participant already exists in the dictionary
+        if participant_id in modified_accounts:
+            # Add the account to the list if it's not already there to avoid duplicates
+            if account_id not in modified_accounts[participant_id]:
+                modified_accounts[participant_id].append(account_id)
+        else:
+            # If the participant does not exist, add them with a new list containing the account
+            modified_accounts[participant_id] = [account_id]
+
     return modified_accounts
 
 def retry_settle(time, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts): 
@@ -158,17 +169,23 @@ def atomic_retry_settle(time, start_again_checking_balance, end_again_checking_b
         start_again_checking_balance['Starttime'] = pd.NaT
 
     if not queue_2.empty:
-        for key, value in modified_accounts.items():
-            # Filter transactions from queue_2 for retry based on modified accounts
-            mask = (queue_2["FromParticipantId"] == key) & (queue_2["FromAccountId"] == value)
-            first_instruction = queue_2[mask]
-            retry_linkcodes = first_instruction['Linkcode'].unique()
-            for linkcode in retry_linkcodes:
-                mask_linkcode = queue_2["Linkcode"] == linkcode
-                instructions_for_processing = queue_2[mask_linkcode].copy()
-                queue_2 = queue_2[~mask_linkcode]
-                instructions_for_processing["Starttime"] = time
-                start_again_checking_balance = pd.concat([start_again_checking_balance, instructions_for_processing], ignore_index=True)
+        for key, account_list in modified_accounts.items():
+            # Iterate through each account for the current participant (key)
+            for account_id in account_list:
+                # Filter transactions from queue_2 for retry based on current account of the participant
+                mask = (queue_2["FromParticipantId"] == key) & (queue_2["FromAccountId"] == account_id)
+                first_instruction = queue_2[mask]
+                retry_linkcodes = first_instruction['Linkcode'].unique()
+                
+                for linkcode in retry_linkcodes:
+                    mask_linkcode = queue_2["Linkcode"] == linkcode
+                    instructions_for_processing = queue_2[mask_linkcode].copy()
+                    # Remove the selected instructions from queue_2
+                    queue_2 = queue_2[~mask_linkcode]
+                    # Update the starttime for processing
+                    instructions_for_processing["Starttime"] = time
+                    # Add these instructions back to the queue for reprocessing
+                    start_again_checking_balance = pd.concat([start_again_checking_balance, instructions_for_processing], ignore_index=True)
 
     # Check for transactions ready for balance and credit checking
     time_limit = time - datetime.timedelta(seconds=2)

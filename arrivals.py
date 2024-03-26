@@ -3,13 +3,6 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-transactions = 400
-arrival_factor_before_10 = 50  
-arrival_factor_after_4 = 50   
-arrival_factor_closed=5
-arrival_factor_day=20
-start_year,start_month,start_day=2024,1,1
-end_year,end_month,end_day=2024,1,10
 
 
 def simulate_arrivals(transactions, start_year,start_month,start_day,end_year,end_month,end_day, arrival_factor_before_10, arrival_factor_after_4,arrival_factor_closed,arrival_factor_day ):
@@ -20,7 +13,6 @@ def simulate_arrivals(transactions, start_year,start_month,start_day,end_year,en
     number_of_days=(end_datetime - start_datetime).days + 1
     transactions_per_day=transactions/number_of_days
     
-
 
     for day in range((end_datetime - start_datetime).days + 1):
         current_day = start_datetime + timedelta(days=day)

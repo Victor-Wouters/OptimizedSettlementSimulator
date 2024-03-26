@@ -11,11 +11,11 @@ if __name__ == '__main__':
 
     for i in range(1):
         print(f"-----run:{i}------------------")
-        amount_transactions = 500#13500#random.randint(5000,10000) # Amount of DVP transactions per day, x2 transactions/day
+        amount_transactions = 750#random.randint(5000,10000) # Amount of DVP transactions per day, x2 transactions/day
         print(amount_transactions)
-        amount_participants =  4#60#random.randint(50,200)
+        amount_participants =  15#random.randint(50,200)
         print(amount_participants)
-        amount_securities = 3#8#random.randint(10,25)
+        amount_securities = 8#random.randint(10,25)
         print(amount_securities)
         min_balance_value = 1000000
         max_balance_value = 10000000000
@@ -23,7 +23,7 @@ if __name__ == '__main__':
          #Initializations:
         opening_time = datetime.time(1,30,0)
         closing_time = datetime.time(19,30,00) #19u30 base
-        recycling = True
+        recycling = False
         credit_limit_percentage = 1.0
 
         # Freeze participant
