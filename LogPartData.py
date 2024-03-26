@@ -26,9 +26,11 @@ def balances_history_calculations(balances_history, participants):
     remaining_columns = balances_history.iloc[:, 2:].applymap(lambda x: x if x < 0 else 0)
     #modified_balances_history = pd.concat([first_two_columns, remaining_columns], axis=1)
     total_credit = remaining_columns.sum()
-    max_credit = total_credit.max()
     total_credit_dataframe = total_credit.to_frame().transpose()
     total_credit_dataframe = total_credit_dataframe.abs()
+    max_credit = total_credit_dataframe.max().max()
+    print("max credit:")
+    print(max_credit)
     credit_plot = total_credit_dataframe.iloc[0]
     plt.figure(figsize=(20, 9))
     plt.plot(credit_plot.index, credit_plot.values)

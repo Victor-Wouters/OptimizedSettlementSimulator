@@ -33,7 +33,7 @@ def generate_data(amount_transactions, amount_participants, amount_securities, m
     #Log input parameters
     parameters_dataframe = pd.DataFrame({ 'amount transactions': amount_transactions,'amount participants': amount_participants, 'amount securities': amount_securities, 'min balance value': min_balance_value, 'max balance value':max_balance_value}, index=[0])  
     #parameters_dataframe.to_csv(f"InputParameters{args.input}.csv", index=False, sep=';')
-    parameters_dataframe.to_csv("InputParameters.csv", index=False, sep=';')
+    #parameters_dataframe.to_csv("InputParameters.csv", index=False, sep=';')
     #Generate participants
     balance_df = ParticipantData.generate_participant_data_modified(amount_participants, amount_securities, min_balance_value, max_balance_value)
     #Generate transactions
