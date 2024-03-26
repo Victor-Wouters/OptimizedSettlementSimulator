@@ -34,10 +34,6 @@ if __name__ == '__main__':
 
         max_credit, final_settlement_efficiency = Simulator.simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
 
-        print(final_settlement_efficiency["Settlement efficiency"].iloc[0])
-        print(max_credit)
-
-
         end_time = datetime.datetime.now()
         print("End Time:", end_time.strftime('%Y-%m-%d %H:%M:%S'))
         duration = end_time - start_time

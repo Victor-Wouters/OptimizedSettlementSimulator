@@ -29,8 +29,6 @@ def balances_history_calculations(balances_history, participants):
     total_credit_dataframe = total_credit.to_frame().transpose()
     total_credit_dataframe = total_credit_dataframe.abs()
     max_credit = total_credit_dataframe.max().max()
-    print("max credit:")
-    print(max_credit)
     credit_plot = total_credit_dataframe.iloc[0]
     plt.figure(figsize=(20, 9))
     plt.plot(credit_plot.index, credit_plot.values)
