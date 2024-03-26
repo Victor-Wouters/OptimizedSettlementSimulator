@@ -26,6 +26,7 @@ def balances_history_calculations(balances_history, participants):
     remaining_columns = balances_history.iloc[:, 2:].applymap(lambda x: x if x < 0 else 0)
     #modified_balances_history = pd.concat([first_two_columns, remaining_columns], axis=1)
     total_credit = remaining_columns.sum()
+    max_credit = total_credit.max()
     total_credit_dataframe = total_credit.to_frame().transpose()
     total_credit_dataframe = total_credit_dataframe.abs()
     credit_plot = total_credit_dataframe.iloc[0]
@@ -34,9 +35,9 @@ def balances_history_calculations(balances_history, participants):
     plt.title('Total credit')
     plt.xlabel('Time')
     plt.ylabel('Value')
-    plt.xticks(rotation=90)
-    #x_ticks = credit_plot.index[::4]
-    #plt.xticks(x_ticks, rotation=90)
+    #plt.xticks(rotation=90)
+    x_ticks = credit_plot.index[::4]
+    plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'balanceHistoryPNG\\Total_credit.png')
@@ -72,13 +73,13 @@ def balances_history_calculations(balances_history, participants):
         plt.xlabel('Time')
         plt.ylabel('Value')
         plt.title(f'Participant {part_id}: Account Values Over Time')
-        plt.xticks(rotation=90)
-        #x_ticks = dataframe.index[::4]
-        #plt.xticks(x_ticks, rotation=90)
+        #plt.xticks(rotation=90)
+        x_ticks = dataframe.index[::4]
+        plt.xticks(x_ticks, rotation=90)
         plt.grid(axis='y')
         plt.legend()
         #plt.grid(True)
         plt.tight_layout()
         plt.savefig(f'balanceHistoryPNG\\BalanceHistoryPart{part_id}.png')
             
-    
+    return max_credit

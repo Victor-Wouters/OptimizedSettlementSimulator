@@ -77,9 +77,9 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, fi
     plt.title('Total unsettled value over time')
     plt.xlabel('Time')
     plt.ylabel('Value')
-    plt.xticks(rotation=90)
-    #x_ticks = unsettled_plot.index[::4]
-    #plt.xticks(x_ticks, rotation=90)
+    #plt.xticks(rotation=90)
+    x_ticks = unsettled_plot.index[::4]
+    plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'statisticsPNG\\total_unsettled_value_over_time.png')
@@ -90,9 +90,9 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, fi
     plt.title('Cumulative settlement efficiency over time')
     plt.xlabel('Time')
     plt.ylabel('Value')
-    plt.xticks(rotation=90)
-    #x_ticks = SE_plot.index[::4]
-    #plt.xticks(x_ticks, rotation=90)
+    #plt.xticks(rotation=90)
+    x_ticks = SE_plot.index[::4]
+    plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'statisticsPNG\\SE_over_time.png')

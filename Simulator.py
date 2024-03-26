@@ -160,10 +160,11 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     #event_log.to_csv(f'eventlog{j}.csv', index=False, sep = ';')
     event_log.to_csv('eventlog\\eventlog.csv', index=False, sep = ';')
 
-    LogPartData.balances_history_calculations(balances_history, participants)
+    max_credit = LogPartData.balances_history_calculations(balances_history, participants)
 
     StatisticsOutput.statistics_generate_output(total_unsettled_value_over_time, SE_over_time, final_settlement_efficiency)
 
+    return max_credit, final_settlement_efficiency
 
 if __name__ == '__main__':
 
@@ -176,14 +177,14 @@ if __name__ == '__main__':
     credit_limit_percentage = 1.0
 
     # Freeze participant
-    freeze = True
+    freeze = False
     freeze_part = '41'
     freeze_time = datetime.time(14,00,00)
 
     start_time = datetime.datetime.now()
     print("Start Time:", start_time.strftime('%Y-%m-%d %H:%M:%S'))
 
-    simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
+    max_credit, final_settlement_efficiency = simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
 
     end_time = datetime.datetime.now()
     print("End Time:", end_time.strftime('%Y-%m-%d %H:%M:%S'))
