@@ -48,6 +48,6 @@ def generate_data(amount_transactions, amount_participants, amount_securities, m
     
 
     #Export  as CSV
-    #transaction_df.to_csv("TRANSACTION1.csv", index=False, sep=';')
-    #balance_df.to_csv("PARTICIPANTS1.csv", index=False, sep=';')
+    transaction_df.to_csv("InputData\\TRANSACTION1.csv", index=False, sep=';')
+    balance_df.to_csv("InputData\\PARTICIPANTS1.csv", index=False, sep=';')
     #transaction_arrivals_df.to_csv("TRANSACTION_ARRIVALS.csv", index=False, sep=';')
