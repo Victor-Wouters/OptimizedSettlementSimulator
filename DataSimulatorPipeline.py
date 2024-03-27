@@ -23,7 +23,7 @@ if __name__ == '__main__':
          #Initializations:
         opening_time = datetime.time(1,30,0)
         closing_time = datetime.time(19,30,00) #19u30 base
-        recycling = False
+        recycling = True
         credit_limit_percentage = 1.0
 
         # Freeze participant

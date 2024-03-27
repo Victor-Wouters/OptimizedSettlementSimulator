@@ -66,7 +66,7 @@ def check_balance(settlement_confirmation, instructions_for_processing, particip
                 current_balance = participants.get(from_part).get_account(from_acc).get_balance()
                 credit_limit = participants.get(from_part).get_account(from_acc).get_credit_limit()
                 if transaction_value > (current_balance+credit_limit):
-                    return False
+                    settlement_confirmation = False
                     
     return settlement_confirmation
 
@@ -97,6 +97,7 @@ def keep_track_modified_accounts(instructions_for_processing, modified_accounts)
             # If the participant does not exist, add them with a new list containing the account
             modified_accounts[participant_id] = [account_id]
 
+    
     return modified_accounts
 
 def retry_settle(time, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts): 
@@ -112,6 +113,7 @@ def retry_settle(time, start_again_checking_balance, end_again_checking_balance,
                 instructions_for_processing["Starttime"] = time
                 # Save for 2 sec before checking
                 start_again_checking_balance = pd.concat([start_again_checking_balance,instructions_for_processing], ignore_index=True)
+                
                 
     rows_to_remove = []
     for index, instruction_checking in start_again_checking_balance.iterrows():
@@ -163,11 +165,11 @@ def retry_settle(time, start_again_checking_balance, end_again_checking_balance,
 
     return start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2,  settled_transactions, event_log
 
-def atomic_retry_settle(time, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts):
+def atomic_retry_settle(time, start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts):
     # Ensure 'Starttime' column exists in the DataFrame
     if 'Starttime' not in start_again_checking_balance.columns:
         start_again_checking_balance['Starttime'] = pd.NaT
-
+    
     if not queue_2.empty:
         for key, account_list in modified_accounts.items():
             # Iterate through each account for the current participant (key)
@@ -185,14 +187,16 @@ def atomic_retry_settle(time, start_again_checking_balance, end_again_checking_b
                     # Update the starttime for processing
                     instructions_for_processing["Starttime"] = time
                     # Add these instructions back to the queue for reprocessing
-                    start_again_checking_balance = pd.concat([start_again_checking_balance, instructions_for_processing], ignore_index=True)
+                    #start_again_checking_balance = pd.concat([start_again_checking_balance, instructions_for_processing], ignore_index=True)
+                    start_checking_balance = pd.concat([start_checking_balance, instructions_for_processing], ignore_index=True)
 
+    # REDUNDANT CODE
     # Check for transactions ready for balance and credit checking
     time_limit = time - datetime.timedelta(seconds=2)
     mask = start_again_checking_balance["Starttime"] == time_limit
     instructions_ready_for_check = start_again_checking_balance[mask]
     if not instructions_ready_for_check.empty:
-        event_log = Eventlog.Add_to_eventlog(event_log, instructions_ready_for_check["Starttime"], time, instructions_ready_for_check['TID'], activity='Checking balance and credit')
+        event_log = Eventlog.Add_to_eventlog(event_log, instructions_ready_for_check["Starttime"], time, instructions_ready_for_check['TID'], activity='RECYCLING: Checking balance and credit')
         end_again_checking_balance = pd.concat([end_again_checking_balance, instructions_ready_for_check], ignore_index=True)
     start_again_checking_balance = start_again_checking_balance[~mask]
 
@@ -214,6 +218,8 @@ def atomic_retry_settle(time, start_again_checking_balance, end_again_checking_b
                 queue_2 = pd.concat([queue_2, instructions_for_processing], ignore_index=True)
                 event_log = Eventlog.Add_to_eventlog(event_log, time, time, instructions_for_processing['TID'], activity='Waiting in queue unsettled')
 
-    return start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, event_log
+    modified_accounts.clear()
+    
+    return start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, event_log
 
     

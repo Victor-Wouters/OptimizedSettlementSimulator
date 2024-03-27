@@ -3,10 +3,9 @@ import random
 import datetime
 from concurrent.futures import ProcessPoolExecutor
 
-def generate_transactions_portion(start_date, end_date, amount_participants, amount_securities, transactions_per_process, balance_df):
-
+def generate_transactions_portion(start_date, end_date, amount_participants, amount_securities, transactions_per_process, balance_df, starting_linkcode):
     transactions = []
-    linkcode = 0
+    linkcode = starting_linkcode  # Initialize with the starting value
     
     for _ in range(transactions_per_process):
         linkcode += 1
@@ -56,11 +55,11 @@ def generate_transaction_data_parallel(amount_transactions, amount_participants,
     datetime_list = [datetime.datetime.strptime(day, "%Y-%m-%d") for day in days_list]
     start_date, end_date = min(datetime_list), max(datetime_list)
     
-    args = [(start_date, end_date, amount_participants, amount_securities, transactions_per_process, balance_df.copy()) for _ in range(num_processes)]
+    # Calculate starting linkcodes for each process
+    args = [(start_date, end_date, amount_participants, amount_securities, transactions_per_process, balance_df.copy(), i * transactions_per_process + 1) for i in range(num_processes)]
     
     transactions = []
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
-        # Using submit and as_completed to manually handle each future
         futures = [executor.submit(generate_transactions_portion, *arg) for arg in args]
         for future in futures:
             transactions.extend(future.result())

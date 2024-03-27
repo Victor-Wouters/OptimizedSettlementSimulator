@@ -81,6 +81,8 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     print("closing time: ")
     print(closing_time)
 
+    modified_accounts = dict() # RECYCLING AT TIMEPOINTS
+
     #for i in range(12000): #for debugging
     for i in range(total_seconds):   # For-loop through every minute of real-time processing of the business day 86400
 
@@ -92,7 +94,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         time = start + datetime.timedelta(seconds=i)
         time_hour = time.time()
 
-        modified_accounts = dict() # Keep track of the accounts modified in this minute to use in queue 2 
+        #modified_accounts = dict() # IMMEDIATE RECYCLING Keep track of the accounts modified in this minute to use in queue 2 
 
         insert_transactions = transactions_entry[transactions_entry['Time']==time]     # Take all the transactions inserted on this minute
 
@@ -111,11 +113,13 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         
         
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed
+            
             end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
-            if recycling:
-                start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.atomic_retry_settle(time, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts)
-        
+            if recycling and time_hour == datetime.time(19,20,0):
+                start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.atomic_retry_settle(time, start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts)
+                
+    
         if time_hour == closing_time:       # Empty queue 1 at close and put in instructions received
             queue_received, queue_1, event_log = MatchingMechanism.clear_queue_unmatched(queue_received, queue_1, time, event_log)
             
@@ -186,7 +190,7 @@ if __name__ == '__main__':
     start_time = datetime.datetime.now()
     print("Start Time:", start_time.strftime('%Y-%m-%d %H:%M:%S'))
 
-    max_credit, final_settlement_efficiency = simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
+    max_credit, final_settlement_efficiency, max_unsettled_value = simulator(opening_time, closing_time, recycling, credit_limit_percentage, freeze, freeze_part, freeze_time)
 
     end_time = datetime.datetime.now()
     print("End Time:", end_time.strftime('%Y-%m-%d %H:%M:%S'))
