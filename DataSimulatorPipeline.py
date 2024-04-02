@@ -11,11 +11,11 @@ if __name__ == '__main__':
 
     for i in range(1):
         print(f"-----run:{i}------------------")
-        amount_transactions = 35000#random.randint(5000,10000) # Amount of DVP transactions per day, x2 transactions/day
+        amount_transactions = 5000#random.randint(5000,10000) # Amount of DVP transactions per day, x2 transactions/day
         print(amount_transactions)
-        amount_participants =  300#random.randint(50,200)
+        amount_participants =  25#random.randint(50,200)
         print(amount_participants)
-        amount_securities = 30#random.randint(10,25)
+        amount_securities = 10#random.randint(10,25)
         print(amount_securities)
         min_balance_value = 1000000
         max_balance_value = 10000000000

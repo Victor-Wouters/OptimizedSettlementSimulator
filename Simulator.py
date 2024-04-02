@@ -34,7 +34,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     cumulative_inserted = pd.DataFrame()
     total_unsettled_value_over_time = pd.DataFrame()
 
-    queue_received = pd.DataFrame() # Transactions inserted before and after opening
+    #queue_received = pd.DataFrame() # Transactions inserted before and after opening
 
     queue_1 = pd.DataFrame()    # Transations waiting to be matched
 
@@ -93,10 +93,13 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
 
         time = start + datetime.timedelta(seconds=i)
         time_hour = time.time()
-
+        time_day = datetime.datetime(year=time.year, month=time.month, day=time.day)
+        time_day = time_day.strftime('%Y-%m-%d')
+        current_day = pd.to_datetime(time_day).date()
+        
         #modified_accounts = dict() # IMMEDIATE RECYCLING Keep track of the accounts modified in this minute to use in queue 2 
 
-        insert_transactions = transactions_entry[transactions_entry['Time']==time]     # Take all the transactions inserted on this minute
+        insert_transactions = transactions_entry[transactions_entry['Time']==time]     # Take all the transactions inserted on this second
 
         if freeze and time_hour >= freeze_time:
 
@@ -106,14 +109,17 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         cumulative_inserted = pd.concat([cumulative_inserted,insert_transactions], ignore_index=True)
         
         end_validating, start_validating, event_log = Validation.validating_duration(insert_transactions, start_validating, end_validating, time, event_log)
-        
-        queue_received, queue_1, start_matching, end_validating, event_log  = MatchingMechanism.matching(time, opening_time, closing_time, queue_received, queue_1, start_matching, end_validating, event_log) # Match inserted transactions
 
+        queue_1, start_matching, end_validating, event_log  = MatchingMechanism.matching(time, queue_1, start_matching, end_validating, event_log) # Match inserted transactions
+
+        #queue_received, opening_time, closing_time, queue_received,
+        
         end_matching, start_matching, event_log = MatchingMechanism.matching_duration(start_matching, end_matching, time, event_log)
         
         
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed
             
+            end_matching = end_matching[end_matching['SettlementDeadline'].dt.date <= current_day]
             end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
             if recycling and time_hour == datetime.time(19,20,0):
@@ -121,9 +127,9 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 
     
         if time_hour == closing_time:       # Empty queue 1 at close and put in instructions received
-            queue_received, queue_1, event_log = MatchingMechanism.clear_queue_unmatched(queue_received, queue_1, time, event_log)
+            #queue_received, queue_1, event_log = MatchingMechanism.clear_queue_unmatched(queue_received, queue_1, time, event_log)
             
-            event_log, queue_received, start_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, queue_received, start_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution)
+            event_log, end_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution)
            
         if i % 900 == 0:
             balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
@@ -156,7 +162,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
             total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
 
 
-    SaveQueues.save_queues(queue_1,queue_received,settled_transactions,queue_2)
+    SaveQueues.save_queues(queue_1, end_matching, settled_transactions, queue_2) # ,queue_received
     final_settlement_efficiency = StatisticsOutput.calculate_total_SE(cumulative_inserted, settled_transactions, final_settlement_efficiency)
     StatisticsOutput.calculate_SE_per_participant(cumulative_inserted, settled_transactions)
 
