@@ -20,7 +20,7 @@ def calculate_total_SE(cumulative_inserted, settled_transactions, final_settleme
 
     return final_settlement_efficiency
 
-def calculate_SE_per_participant(cumulative_inserted,settled_transactions):
+def calculate_SE_per_participant(cumulative_inserted,settled_transactions, day_counter):
 
     if not settled_transactions.empty:
 
@@ -42,8 +42,8 @@ def calculate_SE_per_participant(cumulative_inserted,settled_transactions):
         plt.xticks(merged_df['FromParticipantId'])
         plt.grid(axis='y')
         plt.tight_layout()
-        plt.savefig(f'statisticsPNG\\Settlement_efficiency_for_each_Participant.png')
-        merged_df.to_csv('statisticsCSV\\SE_per_participant.csv', index=False, sep = ';')
+        plt.savefig(f'statisticsPNG\\Settlement_efficiency_for_each_Participant_day_{day_counter}.png')
+        merged_df.to_csv(f'statisticsCSV\\SE_per_participant_day_{day_counter}.csv', index=False, sep = ';')
 
 def calculate_SE_over_time(settled_transactions, cumulative_inserted):
     # Initialize settlement efficiency to 0
@@ -69,7 +69,7 @@ def calculate_total_value_unsettled(queue_2):
     
     return total_unsettled_value_timepoint
 
-def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, final_settlement_efficiency):
+def statistics_generate_output(total_unsettled_value_over_time, SE_over_time): #, final_settlement_efficiency
 
     unsettled_plot = total_unsettled_value_over_time.iloc[0]
     plt.figure(figsize=(20, 9))
@@ -78,7 +78,7 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, fi
     plt.xlabel('Time')
     plt.ylabel('Value')
     #plt.xticks(rotation=90)
-    x_ticks = unsettled_plot.index[::4]
+    x_ticks = unsettled_plot.index[::8]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
@@ -91,7 +91,7 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, fi
     plt.xlabel('Time')
     plt.ylabel('Value')
     #plt.xticks(rotation=90)
-    x_ticks = SE_plot.index[::4]
+    x_ticks = SE_plot.index[::8]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
@@ -99,4 +99,7 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, fi
 
     total_unsettled_value_over_time.to_csv('statisticsCSV\\total_unsettled_value_over_time.csv', index=False, sep = ';')
     SE_over_time.to_csv('statisticsCSV\\SE_over_time.csv', index=False, sep = ';')
-    final_settlement_efficiency.to_csv('statisticsCSV\\final_settlement_efficiency.csv', index=False, sep = ';')
+    #final_settlement_efficiency.to_csv('statisticsCSV\\final_settlement_efficiency.csv', index=False, sep = ';')
+
+def statistics_generate_output_SE(final_settlement_efficiency, day_counter):
+    final_settlement_efficiency.to_csv(f'statisticsCSV\\final_settlement_efficiency_day_{day_counter}.csv', index=False, sep = ';')

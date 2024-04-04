@@ -31,12 +31,17 @@ def settle(time, end_matching, start_checking_balance, end_checking_balance, sta
             
             if settlement_confirmation:
                 instructions_for_processing['Starttime'] = time
-                start_settlement_execution = pd.concat([start_settlement_execution, instructions_for_processing], ignore_index=True)
+                settlement_execution(instructions_for_processing, participants)
+                modified_accounts = keep_track_modified_accounts(instructions_for_processing, modified_accounts)
+                event_log = Eventlog.Add_to_eventlog(event_log, instructions_for_processing["Starttime"], time, instructions_for_processing['TID'], activity='Settling')
+                settled_transactions = pd.concat([settled_transactions, instructions_for_processing], ignore_index=True)
+                #start_settlement_execution = pd.concat([start_settlement_execution, instructions_for_processing], ignore_index=True)
             else:
                 queue_2 = pd.concat([queue_2, instructions_for_processing], ignore_index=True)
                 event_log = Eventlog.Add_to_eventlog(event_log, time, time, instructions_for_processing['TID'], activity='Waiting in queue unsettled')
         end_checking_balance = pd.DataFrame()
-
+        
+    '''
     # Settlement execution
     exec_time_limit = time - datetime.timedelta(seconds=2)
     mask = start_settlement_execution['Starttime'] == exec_time_limit
@@ -53,7 +58,7 @@ def settle(time, end_matching, start_checking_balance, end_checking_balance, sta
             settlement_execution(instructions_for_processing, participants)
             modified_accounts = keep_track_modified_accounts(instructions_for_processing, modified_accounts)
             settled_transactions = pd.concat([settled_transactions, instructions_for_processing], ignore_index=True)
-        end_settlement_execution = pd.DataFrame()
+        end_settlement_execution = pd.DataFrame()'''
 
     return end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, event_log
 
