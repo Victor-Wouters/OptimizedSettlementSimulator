@@ -127,9 +127,6 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
             end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
             if recycling and time_hour == datetime.time(19,20,0):
-                print("recycling")
-                print(queue_2)
-                print(modified_accounts)
                 start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.atomic_retry_settle(time, start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts)
     
         
@@ -209,7 +206,7 @@ if __name__ == '__main__':
     #Initializations:
     opening_time = datetime.time(1,30,0)
     closing_time = datetime.time(19,30,00) #19u30 base
-    recycling = False
+    recycling = True
     credit_limit_percentage = 1.0
 
     # Freeze participant
