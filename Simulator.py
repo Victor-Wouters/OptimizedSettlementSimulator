@@ -42,7 +42,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     end_validating = pd.DataFrame()
 
     start_matching = pd.DataFrame()   # Transactions matched, not yet settled
-    end_matching = pd.DataFrame()
+    end_matching = pd.DataFrame(columns=['SettlementDeadline'])
 
     start_checking_balance = pd.DataFrame()
     end_checking_balance = pd.DataFrame()
@@ -86,7 +86,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     day_counter = 1
     substract_for_next_day = pd.DataFrame()
     settled_transactions_current_day = pd.DataFrame()
-
+    hey = 0
     #for i in range(12000): #for debugging
     for i in range(total_seconds):   # For-loop through every minute of real-time processing of the business day 86400
 
@@ -118,6 +118,17 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         end_matching, start_matching, event_log = MatchingMechanism.matching_duration(start_matching, end_matching, time, event_log)
         
         
+        if time_hour >= datetime.time(0,0,1) and time_hour < datetime.time(0,1,0): # Guarantee closed
+            hey = hey +1
+            print(hey)
+            if not end_matching.empty:
+                end_matching = end_matching[end_matching['SettlementDeadline'].dt.date <= current_day]
+
+                cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
+
+                end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
+            
+
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed
             
             end_matching = end_matching[end_matching['SettlementDeadline'].dt.date <= current_day]

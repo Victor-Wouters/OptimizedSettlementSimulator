@@ -40,25 +40,6 @@ def settle(time, end_matching, start_checking_balance, end_checking_balance, sta
                 queue_2 = pd.concat([queue_2, instructions_for_processing], ignore_index=True)
                 event_log = Eventlog.Add_to_eventlog(event_log, time, time, instructions_for_processing['TID'], activity='Waiting in queue unsettled')
         end_checking_balance = pd.DataFrame()
-        
-    '''
-    # Settlement execution
-    exec_time_limit = time - datetime.timedelta(seconds=2)
-    mask = start_settlement_execution['Starttime'] == exec_time_limit
-    instructions_ready_for_exec = start_settlement_execution[mask]
-    if not instructions_ready_for_exec.empty:
-        event_log = Eventlog.Add_to_eventlog(event_log, instructions_ready_for_exec['Starttime'], time, instructions_ready_for_exec['TID'], activity='Settling')
-        end_settlement_execution = pd.concat([end_settlement_execution, instructions_ready_for_exec], ignore_index=True)
-    start_settlement_execution = start_settlement_execution[~mask]
-
-    # Final settlement processing
-    if not end_settlement_execution.empty:
-        for linkcode in end_settlement_execution['Linkcode'].unique():
-            instructions_for_processing = end_settlement_execution[end_settlement_execution['Linkcode'] == linkcode].copy()
-            settlement_execution(instructions_for_processing, participants)
-            modified_accounts = keep_track_modified_accounts(instructions_for_processing, modified_accounts)
-            settled_transactions = pd.concat([settled_transactions, instructions_for_processing], ignore_index=True)
-        end_settlement_execution = pd.DataFrame()'''
 
     return end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, event_log
 

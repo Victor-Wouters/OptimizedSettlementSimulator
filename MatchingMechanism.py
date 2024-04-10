@@ -5,32 +5,9 @@ import datetime
 
 def matching(time, queue_1, start_matching, end_validating, event_log): #opening_time, closing_time, queue_received, 
     
-    #time_hour = time.time()
-
-    '''
-    # Optimize adding transactions to queue_received by avoiding row-wise operations
-    def add_transactions_to_queue(queue, transactions, event_log, activity):
-        # Ensure transactions is not empty and 'TID' column exists
-        if not transactions.empty:
-            # Concatenate transactions in bulk
-            queue = pd.concat([queue, transactions], ignore_index=True)
-            # Iterate over 'TID' values and log each transaction
-            for tid in transactions['TID']:
-                event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity=activity)
-        return queue, event_log
-    '''
-    #if time_hour < opening_time:
-    #    queue_received, event_log = add_transactions_to_queue(queue_received, insert_transactions, event_log, 'Waiting in queue received')
-    #elif time_hour == opening_time:
-    #    queue_received, start_matching, event_log = matching_in_queue(queue_received, start_matching, event_log, time)
-    #    queue_received, queue_1, event_log = clear_queue_received(queue_received, queue_1, time, event_log)
-    #elif opening_time < time_hour < closing_time:
     if not end_validating.empty:
-        queue_1, start_matching, event_log = matching_insertions(end_validating, queue_1, start_matching, event_log, time) #, queue_received queue_received,
-    #elif time_hour >= closing_time:
-    #    queue_received, event_log = add_transactions_to_queue(queue_received, insert_transactions, event_log, 'Waiting in queue received')
+        queue_1, start_matching, event_log = matching_insertions(end_validating, queue_1, start_matching, event_log, time) 
 
-    # Clear insert_transactions efficiently
     end_validating = pd.DataFrame(columns=end_validating.columns)
 
     return queue_1, start_matching, end_validating, event_log # queue_received,
@@ -73,26 +50,6 @@ def matching_insertions(insert_transactions, queue_1, start_matching, event_log,
 
     return queue_1, start_matching, event_log # queue_received, 
 
-'''
-def matching_in_queue(queue_1, start_matching, event_log, time):
-    if not queue_1.empty:
-        # Calculate value counts directly and filter for Linkcodes occurring exactly twice
-        Linkcode_counts = queue_1['Linkcode'].value_counts()
-        matching_Linkcodes = Linkcode_counts[Linkcode_counts == 2].index
-        
-        # Use boolean indexing to find matching rows in a more efficient manner
-        is_matching = queue_1['Linkcode'].isin(matching_Linkcodes)
-        matched_rows = queue_1[is_matching].copy()
-        matched_rows['Starttime'] = time  # Update Starttime for matched rows
-        
-        # Append matched_rows to start_matching in a single operation
-        start_matching = pd.concat([start_matching, matched_rows], ignore_index=True)
-        
-        # Filter out matched rows from queue_1 using the negation of the is_matching mask
-        queue_1 = queue_1[~is_matching]
-
-    return queue_1, start_matching, event_log
-'''
 
 def matching_duration(start_matching, end_matching, current_time, event_log):
     if not start_matching.empty:
@@ -113,29 +70,3 @@ def matching_duration(start_matching, end_matching, current_time, event_log):
             start_matching = start_matching.drop(instruction_ended_matching.index)
 
     return end_matching, start_matching, event_log
-
-'''
-def clear_queue_unmatched(queue_received, queue_1, time, event_log):
-    # Concatenate queue_received and queue_1 in a more efficient manner
-    queue_received = pd.concat([queue_received, queue_1], ignore_index=True)
-    
-    if not queue_1.empty:
-        event_log = Eventlog.Add_to_eventlog(event_log, time, time, queue_1['TID'], activity='Waiting in queue received')
-    
-    # Reset queue_1 efficiently
-    queue_1 = queue_1.iloc[0:0]  # This retains the structure but drops all data
-    
-    return queue_received, queue_1, event_log
-
-def clear_queue_received(queue_received, queue_1, time, event_log):
-    # Concatenate queue_1 and queue_received in a more efficient manner
-    queue_1 = pd.concat([queue_1, queue_received], ignore_index=True)
-    
-    if not queue_received.empty:
-        event_log = Eventlog.Add_to_eventlog(event_log, time, time, queue_received['TID'], activity='Waiting in queue unmatched')
-    
-    # Efficiently reset queue_received to an empty DataFrame with the same structure
-    queue_received = queue_received.iloc[0:0]  # Clears all rows but retains the structure
-    
-    return queue_received, queue_1, event_log
-'''
