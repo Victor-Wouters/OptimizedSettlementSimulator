@@ -45,9 +45,6 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     start_checking_balance = pd.DataFrame()
     end_checking_balance = pd.DataFrame()
 
-    start_settlement_execution = pd.DataFrame()
-    end_settlement_execution = pd.DataFrame()
-
     queue_2  = pd.DataFrame()   # Matched, but unsettled
     settled_transactions = pd.DataFrame()   # Transactions settled and completed
     event_log = pd.DataFrame(columns=['TID', 'Starttime', 'Endtime', 'Activity'])   # Event log with all activities
@@ -83,7 +80,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     for i in range(total_seconds):   # For-loop through every second of real-time processing of the business day 86400
 
         if i % 8640 == 0:
-            percent_complete = round((i/total_seconds)*100)
+            percent_complete = round((i/(total_seconds-86400))*100)
             bar = '█' * percent_complete + '-' * (100 - percent_complete)
             print(f'\r|{bar}| {percent_complete}% ', end='')
 
@@ -113,10 +110,10 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
             
             cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
 
-            end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
+            end_matching, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
 
             if time_hour == datetime.time(0,1,0):
-                event_log, end_matching, start_checking_balance, start_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_settlement_execution)
+                event_log, end_matching, start_checking_balance = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance)
 
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed
             
@@ -124,7 +121,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
 
             cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
 
-            end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
+            end_matching, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
             if recycling and time_hour == datetime.time(19,20,0):
                 
@@ -133,7 +130,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         
         if time_hour == closing_time:       # Empty all activities at close and put in end_matching
 
-            event_log, end_matching, start_checking_balance, start_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_settlement_execution)
+            event_log, end_matching, start_checking_balance = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance)
 
         if i >= 2 * 86400 and i < total_seconds - 86400:
 
