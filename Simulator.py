@@ -34,8 +34,6 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     cumulative_inserted = pd.DataFrame()
     total_unsettled_value_over_time = pd.DataFrame()
 
-    #queue_received = pd.DataFrame() # Transactions inserted before and after opening
-
     queue_1 = pd.DataFrame()    # Transations waiting to be matched
 
     start_validating = pd.DataFrame()
@@ -82,7 +80,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     settled_transactions_current_day = pd.DataFrame()
     hey = 0
     #for i in range(12000): #for debugging
-    for i in range(total_seconds):   # For-loop through every minute of real-time processing of the business day 86400
+    for i in range(total_seconds):   # For-loop through every second of real-time processing of the business day 86400
 
         if i % 8640 == 0:
             percent_complete = round((i/total_seconds)*100)
@@ -95,8 +93,6 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         time_day = time_day.strftime('%Y-%m-%d')
         current_day = pd.to_datetime(time_day).date()
         
-        #modified_accounts = dict() # IMMEDIATE RECYCLING Keep track of the accounts modified in this minute to use in queue 2 
-
         insert_transactions = transactions_entry[transactions_entry['Time']==time]     # Take all the transactions inserted on this second
 
         if freeze and time_hour >= freeze_time:
@@ -106,8 +102,6 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         end_validating, start_validating, event_log = Validation.validating_duration(insert_transactions, start_validating, end_validating, time, event_log)
 
         queue_1, start_matching, end_validating, event_log  = MatchingMechanism.matching(time, queue_1, start_matching, end_validating, event_log) # Match inserted transactions
-
-        #queue_received, opening_time, closing_time, queue_received,
         
         end_matching, start_matching, event_log = MatchingMechanism.matching_duration(start_matching, end_matching, time, event_log)
         
@@ -133,74 +127,77 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
             end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
             if recycling and time_hour == datetime.time(19,20,0):
-                #cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
+                
                 start_checking_balance, queue_2,  settled_transactions, event_log, cumulative_inserted = SettlementMechanism.atomic_retry_settle(time, start_checking_balance, queue_2, settled_transactions, event_log, modified_accounts, cumulative_inserted)
     
         
         if time_hour == closing_time:       # Empty all activities at close and put in end_matching
 
             event_log, end_matching, start_checking_balance, start_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_settlement_execution)
-           
-        if i % 900 == 0:
-            balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
-            time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
-            
-            new_balance_col = pd.DataFrame({time_hour_str: balances_status['Account Balance']})
-            balances_history = pd.concat([balances_history, new_balance_col], axis=1)
 
-            SE_timepoint = StatisticsOutput.calculate_SE_over_time(settled_transactions, cumulative_inserted)
-            new_SE_col = pd.DataFrame({time_hour_str: SE_timepoint['Settlement efficiency']})
-            SE_over_time = pd.concat([SE_over_time, new_SE_col], axis=1)
-            
-            total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
-            new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
-            total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
+        if i >= 2 * 86400 and i < total_seconds - 86400:
 
-        if i == (total_seconds-1):
-            balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
-            time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
-            
-            new_balance_col = pd.DataFrame({time_hour_str: balances_status['Account Balance']})
-            balances_history = pd.concat([balances_history, new_balance_col], axis=1)
+            #if i == 2 * 86400:
+             #   cumulative_inserted = pd.DataFrame()
 
-            SE_timepoint = StatisticsOutput.calculate_SE_over_time(settled_transactions, cumulative_inserted)
-            new_SE_col = pd.DataFrame({time_hour_str: SE_timepoint['Settlement efficiency']})
-            SE_over_time = pd.concat([SE_over_time, new_SE_col], axis=1)
-            
-            total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
-            new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
-            total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
+            if i % 900 == 0:
+                balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
+                time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
+                
+                new_balance_col = pd.DataFrame({time_hour_str: balances_status['Account Balance']})
+                balances_history = pd.concat([balances_history, new_balance_col], axis=1)
 
-        if (i % 86400 == 0 and i!=0) or (i == (total_seconds-1)):
-            print(f'\n day: {day_counter}')
-            print(f'\n Time: {time}')
-            print("TEST")
-            if day_counter == 1:
-                substract_for_next_day = settled_transactions
-                settled_transactions_current_day = settled_transactions
-                SaveQueues.save_queues(queue_1, end_matching, settled_transactions_current_day, queue_2, day_counter) # ,queue_received
-                final_settlement_efficiency = StatisticsOutput.calculate_total_SE(cumulative_inserted, settled_transactions_current_day, final_settlement_efficiency)
-                StatisticsOutput.calculate_SE_per_participant(cumulative_inserted, settled_transactions_current_day, day_counter)
-                StatisticsOutput.statistics_generate_output_SE(final_settlement_efficiency, day_counter)
-                cumulative_inserted = pd.DataFrame()
-                day_counter = day_counter + 1
-            else:
-                settled_transactions_current_day = pd.concat([substract_for_next_day, settled_transactions]).drop_duplicates(keep=False)
-                substract_for_next_day = settled_transactions
-                SaveQueues.save_queues(queue_1, end_matching, settled_transactions_current_day, queue_2, day_counter) # ,queue_received
-                final_settlement_efficiency = StatisticsOutput.calculate_total_SE(cumulative_inserted, settled_transactions_current_day, final_settlement_efficiency)
-                StatisticsOutput.calculate_SE_per_participant(cumulative_inserted, settled_transactions_current_day, day_counter)
-                StatisticsOutput.statistics_generate_output_SE(final_settlement_efficiency, day_counter)
-                cumulative_inserted = pd.DataFrame()
-                day_counter = day_counter + 1
+                SE_timepoint = StatisticsOutput.calculate_SE_over_time(settled_transactions, cumulative_inserted)
+                new_SE_col = pd.DataFrame({time_hour_str: SE_timepoint['Settlement efficiency']})
+                SE_over_time = pd.concat([SE_over_time, new_SE_col], axis=1)
+                
+                total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
+                new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
+                total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
 
-    #cumulative_inserted.to_csv('cumulative_inserted.csv', index=False, sep = ';')
-    #event_log.to_csv(f'eventlog{j}.csv', index=False, sep = ';')
+            if i == (total_seconds-86401):
+                balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
+                time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
+                
+                new_balance_col = pd.DataFrame({time_hour_str: balances_status['Account Balance']})
+                balances_history = pd.concat([balances_history, new_balance_col], axis=1)
+
+                SE_timepoint = StatisticsOutput.calculate_SE_over_time(settled_transactions, cumulative_inserted)
+                new_SE_col = pd.DataFrame({time_hour_str: SE_timepoint['Settlement efficiency']})
+                SE_over_time = pd.concat([SE_over_time, new_SE_col], axis=1)
+                
+                total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
+                new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
+                total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
+
+            if (i % 86400 == 0 and i!=2 * 86400) or (i == (total_seconds-86401)):
+                if day_counter == 1:
+                    substract_for_next_day = settled_transactions
+                    settled_transactions_current_day = settled_transactions
+                    SaveQueues.save_queues(queue_1, end_matching, settled_transactions_current_day, queue_2, day_counter)
+                    final_settlement_efficiency = StatisticsOutput.calculate_total_SE(cumulative_inserted, settled_transactions_current_day, final_settlement_efficiency)
+                    StatisticsOutput.calculate_SE_per_participant(cumulative_inserted, settled_transactions_current_day, day_counter)
+                    StatisticsOutput.statistics_generate_output_SE(final_settlement_efficiency, day_counter)
+                    cumulative_inserted = pd.DataFrame()
+                    day_counter = day_counter + 1
+                else:
+                    settled_transactions_current_day = pd.concat([substract_for_next_day, settled_transactions]).drop_duplicates(keep=False)
+                    substract_for_next_day = settled_transactions
+                    SaveQueues.save_queues(queue_1, end_matching, settled_transactions_current_day, queue_2, day_counter)
+                    final_settlement_efficiency = StatisticsOutput.calculate_total_SE(cumulative_inserted, settled_transactions_current_day, final_settlement_efficiency)
+                    StatisticsOutput.calculate_SE_per_participant(cumulative_inserted, settled_transactions_current_day, day_counter)
+                    StatisticsOutput.statistics_generate_output_SE(final_settlement_efficiency, day_counter)
+                    cumulative_inserted = pd.DataFrame()
+                    day_counter = day_counter + 1
+        if i == total_seconds - 86400:
+            print(time)
+            break
+
     event_log.to_csv('eventlog\\eventlog.csv', index=False, sep = ';')
 
     max_credit = LogPartData.balances_history_calculations(balances_history, participants)
 
-    StatisticsOutput.statistics_generate_output(total_unsettled_value_over_time, SE_over_time) #, final_settlement_efficiency
+    StatisticsOutput.statistics_generate_output(total_unsettled_value_over_time, SE_over_time)
 
     max_unsettled_value = total_unsettled_value_over_time.iloc[0].max()
 
