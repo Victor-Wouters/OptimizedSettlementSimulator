@@ -17,7 +17,7 @@ def matching_insertions(insert_transactions, queue_1, start_matching, event_log,
         insert_transactions['Starttime'] = pd.NaT
         queue_1 = pd.concat([queue_1, insert_transactions], ignore_index=True)
         for tid in insert_transactions['TID']:
-            event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity='Waiting in queue unmatched')
+            event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity='Waiting in backlog unmatched')
         return queue_1, start_matching, event_log  #queue_received, 
 
     unmatched_transactions = pd.DataFrame(columns=queue_1.columns)
@@ -46,7 +46,7 @@ def matching_insertions(insert_transactions, queue_1, start_matching, event_log,
     if not unmatched_transactions.empty:
         queue_1 = pd.concat([queue_1, unmatched_transactions], ignore_index=True)
         for tid in unmatched_transactions['TID']:
-            event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity='Waiting in queue unmatched')
+            event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity='Waiting in backlog unmatched')
 
     return queue_1, start_matching, event_log # queue_received, 
 
@@ -54,7 +54,7 @@ def matching_insertions(insert_transactions, queue_1, start_matching, event_log,
 def matching_duration(start_matching, end_matching, current_time, event_log):
     if not start_matching.empty:
         # Calculate the condition directly on the DataFrame
-        matching_condition = current_time == (start_matching["Starttime"] + datetime.timedelta(seconds=2))
+        matching_condition = current_time == (start_matching["Starttime"] + datetime.timedelta(seconds=1))
 
         # Filter rows that match the condition
         instruction_ended_matching = start_matching[matching_condition].copy()

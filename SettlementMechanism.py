@@ -15,11 +15,11 @@ def settle(time, end_matching, start_checking_balance, end_checking_balance, que
         end_matching = end_matching.iloc[0:0]  # Clear efficiently
 
     # Checking balance and credit activity
-    check_time_limit = time - datetime.timedelta(seconds=2)
+    check_time_limit = time - datetime.timedelta(seconds=1)
     mask = start_checking_balance['Starttime'] == check_time_limit
     instructions_ready_for_check = start_checking_balance[mask]
     if not instructions_ready_for_check.empty:
-        event_log = Eventlog.Add_to_eventlog(event_log, instructions_ready_for_check['Starttime'], time, instructions_ready_for_check['TID'], activity='Checking balance and credit')
+        event_log = Eventlog.Add_to_eventlog(event_log, instructions_ready_for_check['Starttime'], time, instructions_ready_for_check['TID'], activity='Positioning')
         end_checking_balance = pd.concat([end_checking_balance, instructions_ready_for_check], ignore_index=True)
     start_checking_balance = start_checking_balance[~mask]
 
@@ -37,7 +37,7 @@ def settle(time, end_matching, start_checking_balance, end_checking_balance, que
                 settled_transactions = pd.concat([settled_transactions, instructions_for_processing], ignore_index=True)
             else:
                 queue_2 = pd.concat([queue_2, instructions_for_processing], ignore_index=True)
-                event_log = Eventlog.Add_to_eventlog(event_log, time, time, instructions_for_processing['TID'], activity='Waiting in queue unsettled')
+                event_log = Eventlog.Add_to_eventlog(event_log, time, time, instructions_for_processing['TID'], activity='Waiting in backlog for recycling')
         end_checking_balance = pd.DataFrame()
 
     return end_matching, start_checking_balance, end_checking_balance, queue_2, settled_transactions, event_log

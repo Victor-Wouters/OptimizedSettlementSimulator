@@ -12,7 +12,7 @@ def validating_duration(insert_transactions, start_validating, end_validating, c
 
     # Identify rows where 'Starttime' + 2 seconds equals current_time
     if not start_validating.empty:
-        valid_time = start_validating["Starttime"] + datetime.timedelta(seconds=2)
+        valid_time = start_validating["Starttime"] + datetime.timedelta(seconds=1)
         valid_rows = current_time == valid_time
 
         # Filter rows that satisfy the condition
