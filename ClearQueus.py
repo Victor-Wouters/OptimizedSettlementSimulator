@@ -14,10 +14,8 @@ def clear_queue_to_queue_end_matching(queue_received, queue_cleared, time, event
     
     return queue_received, queue_cleared, event_log
 
-def send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution):
+def send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_settlement_execution):
     end_matching, start_checking_balance, event_log  = clear_queue_to_queue_end_matching(end_matching, start_checking_balance, time, event_log)
-    end_matching, start_again_checking_balance, event_log  = clear_queue_to_queue_end_matching(end_matching, start_again_checking_balance, time, event_log)
     end_matching, start_settlement_execution, event_log  = clear_queue_to_queue_end_matching(end_matching, start_settlement_execution, time, event_log)
-    end_matching, start_again_settlement_execution, event_log  = clear_queue_to_queue_end_matching(end_matching, start_again_settlement_execution, time, event_log)
 
-    return event_log, end_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution
+    return event_log, end_matching, start_checking_balance, start_settlement_execution

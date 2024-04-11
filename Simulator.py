@@ -47,14 +47,8 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     start_checking_balance = pd.DataFrame()
     end_checking_balance = pd.DataFrame()
 
-    start_again_checking_balance = pd.DataFrame()
-    end_again_checking_balance = pd.DataFrame()
-
     start_settlement_execution = pd.DataFrame()
     end_settlement_execution = pd.DataFrame()
-
-    start_again_settlement_execution = pd.DataFrame()
-    end_again_settlement_execution = pd.DataFrame()
 
     queue_2  = pd.DataFrame()   # Matched, but unsettled
     settled_transactions = pd.DataFrame()   # Transactions settled and completed
@@ -119,15 +113,16 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         
         
         if time_hour >= datetime.time(0,0,1) and time_hour < datetime.time(0,1,0): # Guarantee closed
-            hey = hey +1
-            print(hey)
-            if not end_matching.empty:
-                end_matching = end_matching[end_matching['SettlementDeadline'].dt.date <= current_day]
-
-                cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
-
-                end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
             
+            end_matching['SettlementDeadline'] = pd.to_datetime(end_matching['SettlementDeadline'])
+            end_matching = end_matching[end_matching['SettlementDeadline'].dt.date.le(current_day)]
+            
+            cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
+
+            end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
+
+            if time_hour == datetime.time(0,1,0):
+                event_log, end_matching, start_checking_balance, start_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_settlement_execution)
 
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed
             
@@ -138,13 +133,13 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
             end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, start_settlement_execution, end_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
             if recycling and time_hour == datetime.time(19,20,0):
-                start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2,  settled_transactions, event_log = SettlementMechanism.atomic_retry_settle(time, start_checking_balance, start_again_checking_balance, end_again_checking_balance, start_again_settlement_execution, end_again_settlement_execution, queue_2, settled_transactions, participants, event_log, modified_accounts)
+                #cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
+                start_checking_balance, queue_2,  settled_transactions, event_log, cumulative_inserted = SettlementMechanism.atomic_retry_settle(time, start_checking_balance, queue_2, settled_transactions, event_log, modified_accounts, cumulative_inserted)
     
         
-        if time_hour == closing_time:       # Empty queue 1 at close and put in instructions received
-            #queue_received, queue_1, event_log = MatchingMechanism.clear_queue_unmatched(queue_received, queue_1, time, event_log)
-            
-            event_log, end_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_again_checking_balance, start_settlement_execution, start_again_settlement_execution)
+        if time_hour == closing_time:       # Empty all activities at close and put in end_matching
+
+            event_log, end_matching, start_checking_balance, start_settlement_execution = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance, start_settlement_execution)
            
         if i % 900 == 0:
             balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
@@ -179,6 +174,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         if (i % 86400 == 0 and i!=0) or (i == (total_seconds-1)):
             print(f'\n day: {day_counter}')
             print(f'\n Time: {time}')
+            print("TEST")
             if day_counter == 1:
                 substract_for_next_day = settled_transactions
                 settled_transactions_current_day = settled_transactions
