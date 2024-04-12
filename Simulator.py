@@ -216,7 +216,6 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                     cumulative_inserted = pd.DataFrame()
                     day_counter = day_counter + 1
         if i == total_seconds - 86400:
-            print(time)
             break
 
     event_log.to_csv('eventlog\\eventlog.csv', index=False, sep = ';')
