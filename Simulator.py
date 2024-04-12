@@ -34,6 +34,8 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     cumulative_inserted = pd.DataFrame()
     total_unsettled_value_over_time = pd.DataFrame()
     total_value_waiting_selection_over_time  = pd.DataFrame()
+    total_value_waiting_queue_1_over_time = pd.DataFrame()
+    total_value_settled_over_time = pd.DataFrame()
 
     queue_1 = pd.DataFrame()    # Transations waiting to be matched
 
@@ -159,11 +161,11 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 new_total_value_waiting_selection_col = pd.DataFrame({time_hour_str: total_value_waiting_selection_timepoint['Total value waiting']})
                 total_value_waiting_selection_over_time = pd.concat([total_value_waiting_selection_over_time, new_total_value_waiting_selection_col], axis=1)
 
-                total_value_waiting_queue_1_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                total_value_waiting_queue_1_timepoint = StatisticsOutput.calculate_total_value_waiting_unmatched(queue_1)
                 new_total_value_waiting_queue_1_col = pd.DataFrame({time_hour_str: total_value_waiting_queue_1_timepoint['Total value waiting']})
                 total_value_waiting_queue_1_over_time = pd.concat([total_value_waiting_queue_1_over_time, new_total_value_waiting_queue_1_col], axis=1)
 
-                total_value_settled_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                total_value_settled_timepoint = StatisticsOutput.calculate_total_value_settled(settled_transactions)
                 new_total_value_settled_col = pd.DataFrame({time_hour_str: total_value_settled_timepoint['Total value settled']})
                 total_value_settled_over_time = pd.concat([total_value_settled_over_time, new_total_value_settled_col], axis=1)
 
@@ -186,11 +188,11 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 new_total_value_waiting_selection_col = pd.DataFrame({time_hour_str: total_value_waiting_selection_timepoint['Total value waiting']})
                 total_value_waiting_selection_over_time = pd.concat([total_value_waiting_selection_over_time, new_total_value_waiting_selection_col], axis=1)
 
-                total_value_waiting_queue_1_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                total_value_waiting_queue_1_timepoint = StatisticsOutput.calculate_total_value_waiting_unmatched(queue_1)
                 new_total_value_waiting_queue_1_col = pd.DataFrame({time_hour_str: total_value_waiting_queue_1_timepoint['Total value waiting']})
                 total_value_waiting_queue_1_over_time = pd.concat([total_value_waiting_queue_1_over_time, new_total_value_waiting_queue_1_col], axis=1)
 
-                total_value_settled_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                total_value_settled_timepoint = StatisticsOutput.calculate_total_value_settled(settled_transactions)
                 new_total_value_settled_col = pd.DataFrame({time_hour_str: total_value_settled_timepoint['Total value settled']})
                 total_value_settled_over_time = pd.concat([total_value_settled_over_time, new_total_value_settled_col], axis=1)
 
