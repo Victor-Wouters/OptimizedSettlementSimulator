@@ -33,6 +33,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     SE_over_time = pd.DataFrame()
     cumulative_inserted = pd.DataFrame()
     total_unsettled_value_over_time = pd.DataFrame()
+    total_value_waiting_selection_over_time  = pd.DataFrame()
 
     queue_1 = pd.DataFrame()    # Transations waiting to be matched
 
@@ -75,7 +76,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     day_counter = 1
     substract_for_next_day = pd.DataFrame()
     settled_transactions_current_day = pd.DataFrame()
-    hey = 0
+
     #for i in range(12000): #for debugging
     for i in range(total_seconds):   # For-loop through every second of real-time processing of the business day 86400
 
@@ -106,22 +107,24 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         if time_hour >= datetime.time(0,0,1) and time_hour < datetime.time(0,1,0): # Guarantee closed
             
             end_matching['SettlementDeadline'] = pd.to_datetime(end_matching['SettlementDeadline'])
-            end_matching = end_matching[end_matching['SettlementDeadline'].dt.date.le(current_day)]
-            
-            cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
+            end_matching_selected = end_matching[end_matching['SettlementDeadline'].dt.date.le(current_day)]
+            end_matching = end_matching.drop(end_matching_selected.index)
 
-            end_matching, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
+            cumulative_inserted = pd.concat([cumulative_inserted,end_matching_selected], ignore_index=True)
+
+            end_matching_selected, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching_selected, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
 
             if time_hour == datetime.time(0,1,0):
                 event_log, end_matching, start_checking_balance = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance)
 
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed
             
-            end_matching = end_matching[end_matching['SettlementDeadline'].dt.date <= current_day]
+            end_matching_selected = end_matching[end_matching['SettlementDeadline'].dt.date <= current_day]
+            end_matching = end_matching.drop(end_matching_selected.index)
 
-            cumulative_inserted = pd.concat([cumulative_inserted,end_matching], ignore_index=True)
+            cumulative_inserted = pd.concat([cumulative_inserted,end_matching_selected], ignore_index=True)
 
-            end_matching, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
+            end_matching_selected, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching_selected, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
         
             if recycling and time_hour == datetime.time(19,20,0):
                 
@@ -152,6 +155,18 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
                 total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
 
+                total_value_waiting_selection_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(end_matching)
+                new_total_value_waiting_selection_col = pd.DataFrame({time_hour_str: total_value_waiting_selection_timepoint['Total value waiting']})
+                total_value_waiting_selection_over_time = pd.concat([total_value_waiting_selection_over_time, new_total_value_waiting_selection_col], axis=1)
+
+                total_value_waiting_queue_1_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                new_total_value_waiting_queue_1_col = pd.DataFrame({time_hour_str: total_value_waiting_queue_1_timepoint['Total value waiting']})
+                total_value_waiting_queue_1_over_time = pd.concat([total_value_waiting_queue_1_over_time, new_total_value_waiting_queue_1_col], axis=1)
+
+                total_value_settled_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                new_total_value_settled_col = pd.DataFrame({time_hour_str: total_value_settled_timepoint['Total value settled']})
+                total_value_settled_over_time = pd.concat([total_value_settled_over_time, new_total_value_settled_col], axis=1)
+
             if i == (total_seconds-86401):
                 balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
                 time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -166,6 +181,18 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 total_unsettled_value_timepoint = StatisticsOutput.calculate_total_value_unsettled(queue_2)
                 new_total_unsettled_value_col = pd.DataFrame({time_hour_str: total_unsettled_value_timepoint['Total value unsettled']})
                 total_unsettled_value_over_time = pd.concat([total_unsettled_value_over_time, new_total_unsettled_value_col], axis=1)
+
+                total_value_waiting_selection_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(end_matching)
+                new_total_value_waiting_selection_col = pd.DataFrame({time_hour_str: total_value_waiting_selection_timepoint['Total value waiting']})
+                total_value_waiting_selection_over_time = pd.concat([total_value_waiting_selection_over_time, new_total_value_waiting_selection_col], axis=1)
+
+                total_value_waiting_queue_1_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                new_total_value_waiting_queue_1_col = pd.DataFrame({time_hour_str: total_value_waiting_queue_1_timepoint['Total value waiting']})
+                total_value_waiting_queue_1_over_time = pd.concat([total_value_waiting_queue_1_over_time, new_total_value_waiting_queue_1_col], axis=1)
+
+                total_value_settled_timepoint = StatisticsOutput.calculate_total_value_waiting_selection(queue_1)
+                new_total_value_settled_col = pd.DataFrame({time_hour_str: total_value_settled_timepoint['Total value settled']})
+                total_value_settled_over_time = pd.concat([total_value_settled_over_time, new_total_value_settled_col], axis=1)
 
             if (i % 86400 == 0 and i!=2 * 86400) or (i == (total_seconds-86401)):
                 if day_counter == 1:
@@ -194,7 +221,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
 
     max_credit = LogPartData.balances_history_calculations(balances_history, participants)
 
-    StatisticsOutput.statistics_generate_output(total_unsettled_value_over_time, SE_over_time)
+    StatisticsOutput.statistics_generate_output(total_unsettled_value_over_time, SE_over_time, total_value_waiting_selection_over_time, total_value_waiting_queue_1_over_time, total_value_settled_over_time)
 
     max_unsettled_value = total_unsettled_value_over_time.iloc[0].max()
 

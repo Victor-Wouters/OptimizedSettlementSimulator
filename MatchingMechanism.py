@@ -3,22 +3,22 @@ import Eventlog
 import datetime
 
 
-def matching(time, queue_1, start_matching, end_validating, event_log): #opening_time, closing_time, queue_received, 
+def matching(time, queue_1, start_matching, end_validating, event_log):  
     
     if not end_validating.empty:
         queue_1, start_matching, event_log = matching_insertions(end_validating, queue_1, start_matching, event_log, time) 
 
     end_validating = pd.DataFrame(columns=end_validating.columns)
 
-    return queue_1, start_matching, end_validating, event_log # queue_received,
+    return queue_1, start_matching, end_validating, event_log 
 
-def matching_insertions(insert_transactions, queue_1, start_matching, event_log, time): #, queue_received
+def matching_insertions(insert_transactions, queue_1, start_matching, event_log, time): 
     if queue_1.empty:
         insert_transactions['Starttime'] = pd.NaT
         queue_1 = pd.concat([queue_1, insert_transactions], ignore_index=True)
         for tid in insert_transactions['TID']:
             event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity='Waiting in backlog unmatched')
-        return queue_1, start_matching, event_log  #queue_received, 
+        return queue_1, start_matching, event_log  
 
     unmatched_transactions = pd.DataFrame(columns=queue_1.columns)
 
@@ -48,7 +48,7 @@ def matching_insertions(insert_transactions, queue_1, start_matching, event_log,
         for tid in unmatched_transactions['TID']:
             event_log = Eventlog.Add_to_eventlog(event_log, time, time, tid, activity='Waiting in backlog unmatched')
 
-    return queue_1, start_matching, event_log # queue_received, 
+    return queue_1, start_matching, event_log  
 
 
 def matching_duration(start_matching, end_matching, current_time, event_log):

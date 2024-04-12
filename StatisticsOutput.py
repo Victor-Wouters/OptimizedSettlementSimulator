@@ -69,7 +69,7 @@ def calculate_total_value_unsettled(queue_2):
     
     return total_unsettled_value_timepoint
 
-def statistics_generate_output(total_unsettled_value_over_time, SE_over_time): #, final_settlement_efficiency
+def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, total_value_waiting_selection_over_time, total_value_waiting_queue_1_over_time, total_value_settled_over_time): 
 
     unsettled_plot = total_unsettled_value_over_time.iloc[0]
     plt.figure(figsize=(20, 9))
@@ -84,6 +84,7 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time): #
     plt.tight_layout()
     plt.savefig(f'statisticsPNG\\total_unsettled_value_over_time.png')
 
+    '''
     SE_plot = SE_over_time.iloc[0]
     plt.figure(figsize=(20, 7))
     plt.plot(SE_plot.index, SE_plot.values)
@@ -95,11 +96,75 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time): #
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig(f'statisticsPNG\\SE_over_time.png')
+    plt.savefig(f'statisticsPNG\\SE_over_time.png')'''
 
+    selection_plot = total_value_waiting_selection_over_time.iloc[0]
+    plt.figure(figsize=(20, 9))
+    plt.plot(selection_plot.index, selection_plot.values)
+    plt.title('Total value waiting for selection over time')
+    plt.xlabel('Time')
+    plt.ylabel('Value')
+    #plt.xticks(rotation=90)
+    x_ticks = selection_plot.index[::8]
+    plt.xticks(x_ticks, rotation=90)
+    plt.grid(axis='y')
+    plt.tight_layout()
+    plt.savefig(f'statisticsPNG\\total_value_waiting_selection_over_time.png')
+
+    queue_1_plot = total_value_waiting_queue_1_over_time.iloc[0]
+    plt.figure(figsize=(20, 9))
+    plt.plot(queue_1_plot.index, queue_1_plot.values)
+    plt.title('Total value waiting in backlog unmatched over time')
+    plt.xlabel('Time')
+    plt.ylabel('Value')
+    #plt.xticks(rotation=90)
+    x_ticks = queue_1_plot.index[::8]
+    plt.xticks(x_ticks, rotation=90)
+    plt.grid(axis='y')
+    plt.tight_layout()
+    plt.savefig(f'statisticsPNG\\total_value_waiting_queue_1_over_time.png')
+
+    settled_plot = total_value_settled_over_time.iloc[0]
+    plt.figure(figsize=(20, 9))
+    plt.plot(settled_plot.index, settled_plot.values)
+    plt.title('Total value settled over time')
+    plt.xlabel('Time')
+    plt.ylabel('Value')
+    #plt.xticks(rotation=90)
+    x_ticks = settled_plot.index[::8]
+    plt.xticks(x_ticks, rotation=90)
+    plt.grid(axis='y')
+    plt.tight_layout()
+    plt.savefig(f'statisticsPNG\\total_value_settled_over_time.png')
+    
+    total_value_waiting_selection_over_time.to_csv('statisticsCSV\\total_value_waiting_selection_over_time.csv', index=False, sep = ';')
+    total_value_settled_over_time.to_csv('statisticsCSV\\total_value_settled_over_time.csv', index=False, sep = ';')
+    total_value_waiting_queue_1_over_time.to_csv('statisticsCSV\\total_value_waiting_queue_1_over_time.csv', index=False, sep = ';')
     total_unsettled_value_over_time.to_csv('statisticsCSV\\total_unsettled_value_over_time.csv', index=False, sep = ';')
-    SE_over_time.to_csv('statisticsCSV\\SE_over_time.csv', index=False, sep = ';')
+    #SE_over_time.to_csv('statisticsCSV\\SE_over_time.csv', index=False, sep = ';')
+    
     #final_settlement_efficiency.to_csv('statisticsCSV\\final_settlement_efficiency.csv', index=False, sep = ';')
 
 def statistics_generate_output_SE(final_settlement_efficiency, day_counter):
     final_settlement_efficiency.to_csv(f'statisticsCSV\\final_settlement_efficiency_day_{day_counter}.csv', index=False, sep = ';')
+
+def calculate_total_value_waiting_selection(end_matching):
+
+    total_value_waiting_selection = int(end_matching['Value'].sum()) if not end_matching.empty else 0
+    total_value_waiting_selection_timepoint = pd.DataFrame({'Total value waiting': [total_value_waiting_selection]})
+    
+    return total_value_waiting_selection_timepoint
+
+def calculate_total_value_waiting_unmatched(queue_1):
+
+    total_value_waiting_queue_1 = int(queue_1['Value'].sum()) if not queue_1.empty else 0
+    total_value_waiting_queue_1_timepoint = pd.DataFrame({'Total value waiting': [total_value_waiting_queue_1]})
+    
+    return total_value_waiting_queue_1_timepoint
+
+def calculate_total_value_settled(settled_transactions):
+
+    total_value_settled = int(settled_transactions['Value'].sum()) if not settled_transactions.empty else 0
+    total_value_settled_timepoint = pd.DataFrame({'Total value settled': [total_value_settled]})
+    
+    return total_value_settled_timepoint
