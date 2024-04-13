@@ -83,7 +83,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     for i in range(total_seconds):   # For-loop through every second of real-time processing of the business day 86400
 
         if i % 8640 == 0:
-            percent_complete = round((i/(total_seconds-86400-86400-86400))*100)
+            percent_complete = round((i/(total_seconds-86400-86400))*100)
             bar = '█' * percent_complete + '-' * (100 - percent_complete)
             print(f'\r|{bar}| {percent_complete}% ', end='')
 
@@ -137,7 +137,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
 
             event_log, end_matching, start_checking_balance = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance)
 
-        if i >= 2 * 86400 and i < total_seconds-86400-86400-86400:
+        if i >= 2 * 86400 and i < total_seconds-86400-86400:
 
             #if i == 2 * 86400:
              #   cumulative_inserted = pd.DataFrame()
@@ -169,7 +169,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 new_total_value_settled_col = pd.DataFrame({time_hour_str: total_value_settled_timepoint['Total value settled']})
                 total_value_settled_over_time = pd.concat([total_value_settled_over_time, new_total_value_settled_col], axis=1)
 
-            if i == (total_seconds-86401-86400-86400):
+            if i == (total_seconds-86401-86400):
                 balances_status = LogPartData.get_partacc_data(participants, transactions_entry)
                 time_hour_str = time.strftime('%Y-%m-%d %H:%M:%S')
                 
@@ -196,7 +196,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                 new_total_value_settled_col = pd.DataFrame({time_hour_str: total_value_settled_timepoint['Total value settled']})
                 total_value_settled_over_time = pd.concat([total_value_settled_over_time, new_total_value_settled_col], axis=1)
 
-            if (i % 86400 == 0 and i!=2 * 86400) or (i == (total_seconds-86401-86400-86400)):
+            if (i % 86400 == 0 and i!=2 * 86400) or (i == (total_seconds-86401-86400)):
                 if day_counter == 1:
                     substract_for_next_day = settled_transactions
                     settled_transactions_current_day = settled_transactions
@@ -215,7 +215,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
                     StatisticsOutput.statistics_generate_output_SE(final_settlement_efficiency, day_counter)
                     cumulative_inserted = pd.DataFrame()
                     day_counter = day_counter + 1
-        if i == total_seconds-86400-86400-86400:
+        if i == total_seconds-86400-86400:
             break
 
     event_log.to_csv('eventlog\\eventlog.csv', index=False, sep = ';')
