@@ -24,25 +24,26 @@ def calculate_SE_per_participant(cumulative_inserted,settled_transactions, day_c
 
     if not settled_transactions.empty:
 
+        plt.rcParams['font.size'] = 15
         settled_part = settled_transactions.groupby('FromParticipantId')['Value'].sum().reset_index()
         input_part = cumulative_inserted.groupby('FromParticipantId')['Value'].sum().reset_index()
         merged_df = pd.merge(settled_part, input_part, on='FromParticipantId', suffixes=('_settled', '_input'))
         merged_df['settled_input_ratio'] = merged_df['Value_settled'] / merged_df['Value_input']
         #merged_df['settled_input_ratio'] = merged_df['settled_input_ratio'].apply(lambda x: "{:.2%}".format(x))
-        plt.figure(figsize=(20, 9))
+        plt.figure(figsize=(15, 8))
         merged_df['FromParticipantId'] = merged_df['FromParticipantId'].astype(int)
         sorted_df = merged_df.sort_values(by='FromParticipantId')
         bars = plt.bar(sorted_df['FromParticipantId'], sorted_df['settled_input_ratio'], color='limegreen')
         for bar in bars:
             yval = bar.get_height()
             plt.text(bar.get_x() + bar.get_width()/2, yval + 0.005, "{:.2%}".format(yval), ha='center', va='bottom')
-        plt.title('Settlement efficiency for each Participant')
+        plt.title('Settlement Efficiency For Each Participant')
         plt.xlabel('Participant')
         plt.ylabel('Settlement efficiency')
         plt.xticks(merged_df['FromParticipantId'])
         plt.grid(axis='y')
         plt.tight_layout()
-        plt.savefig(f'statisticsPNG\\Settlement_efficiency_for_each_Participant_day_{day_counter}.png')
+        plt.savefig(f'statisticsPNG\\Settlement_efficiency_for_each_Participant_day_{day_counter}.pdf')
         merged_df.to_csv(f'statisticsCSV\\SE_per_participant_day_{day_counter}.csv', index=False, sep = ';')
 
 def calculate_SE_over_time(settled_transactions, cumulative_inserted):
@@ -71,18 +72,19 @@ def calculate_total_value_unsettled(queue_2):
 
 def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, total_value_waiting_selection_over_time, total_value_waiting_queue_1_over_time, total_value_settled_over_time): 
 
+    plt.rcParams['font.size'] = 15
     unsettled_plot = total_unsettled_value_over_time.iloc[0]
-    plt.figure(figsize=(20, 9))
+    plt.figure(figsize=(15, 8))
     plt.plot(unsettled_plot.index, unsettled_plot.values)
-    plt.title('Total unsettled value over time')
-    plt.xlabel('Time')
-    plt.ylabel('Value')
+    plt.title('Cumulative Unsettled Value Over Time')
+    plt.xlabel('Time (15-minute intervals)')
+    plt.ylabel('Value (€)')
     #plt.xticks(rotation=90)
-    x_ticks = unsettled_plot.index[::8]
+    x_ticks = unsettled_plot.index[::24]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig(f'statisticsPNG\\total_unsettled_value_over_time.png')
+    plt.savefig(f'statisticsPNG\\total_unsettled_value_over_time.pdf')
 
     '''
     SE_plot = SE_over_time.iloc[0]
@@ -99,43 +101,43 @@ def statistics_generate_output(total_unsettled_value_over_time, SE_over_time, to
     plt.savefig(f'statisticsPNG\\SE_over_time.png')'''
 
     selection_plot = total_value_waiting_selection_over_time.iloc[0]
-    plt.figure(figsize=(20, 9))
+    plt.figure(figsize=(15, 8))
     plt.plot(selection_plot.index, selection_plot.values)
-    plt.title('Total value waiting for selection over time')
-    plt.xlabel('Time')
-    plt.ylabel('Value')
+    plt.title('Total Value Waiting For Selection Over Time')
+    plt.xlabel('Time (15-minute intervals)')
+    plt.ylabel('Value (€)')
     #plt.xticks(rotation=90)
-    x_ticks = selection_plot.index[::8]
+    x_ticks = selection_plot.index[::24]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig(f'statisticsPNG\\total_value_waiting_selection_over_time.png')
+    plt.savefig(f'statisticsPNG\\total_value_waiting_selection_over_time.pdf')
 
     queue_1_plot = total_value_waiting_queue_1_over_time.iloc[0]
-    plt.figure(figsize=(20, 9))
+    plt.figure(figsize=(15, 8))
     plt.plot(queue_1_plot.index, queue_1_plot.values)
-    plt.title('Total value waiting in backlog unmatched over time')
-    plt.xlabel('Time')
-    plt.ylabel('Value')
+    plt.title('Total Value Waiting In Backlog Unmatched Over Time')
+    plt.xlabel('Time (15-minute intervals)')
+    plt.ylabel('Value (€)')
     #plt.xticks(rotation=90)
-    x_ticks = queue_1_plot.index[::8]
+    x_ticks = queue_1_plot.index[::24]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig(f'statisticsPNG\\total_value_waiting_queue_1_over_time.png')
+    plt.savefig(f'statisticsPNG\\total_value_waiting_queue_1_over_time.pdf')
 
     settled_plot = total_value_settled_over_time.iloc[0]
-    plt.figure(figsize=(20, 9))
+    plt.figure(figsize=(15, 8))
     plt.plot(settled_plot.index, settled_plot.values)
-    plt.title('Total value settled over time')
-    plt.xlabel('Time')
-    plt.ylabel('Value')
+    plt.title('Cumulative Value Settled Over Time')
+    plt.xlabel('Time (15-minute intervals)')
+    plt.ylabel('Value (€)')
     #plt.xticks(rotation=90)
-    x_ticks = settled_plot.index[::8]
+    x_ticks = settled_plot.index[::24]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig(f'statisticsPNG\\total_value_settled_over_time.png')
+    plt.savefig(f'statisticsPNG\\total_value_settled_over_time.pdf')
     
     total_value_waiting_selection_over_time.to_csv('statisticsCSV\\total_value_waiting_selection_over_time.csv', index=False, sep = ';')
     total_value_settled_over_time.to_csv('statisticsCSV\\total_value_settled_over_time.csv', index=False, sep = ';')

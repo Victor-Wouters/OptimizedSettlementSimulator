@@ -52,7 +52,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     settled_transactions = pd.DataFrame()   # Transactions settled and completed
     event_log = pd.DataFrame(columns=['TID', 'Starttime', 'Endtime', 'Activity'])   # Event log with all activities
 
-
+    '''
     earliest_datetime = transactions_entry['Time'].min()
     earliest_datetime = earliest_datetime.date()
     start = earliest_datetime
@@ -65,7 +65,29 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
     midnight = datetime.time(0,0,0)
     start = datetime.datetime.combine(start, midnight)
     end = datetime.datetime.combine(end, midnight)
+    total_seconds = int((end - start).total_seconds())'''
+
+    # Assuming transactions_entry['Time'] contains datetime objects
+    earliest_datetime = transactions_entry['Time'].min().date()  # Get the date part of the earliest datetime
+    latest_datetime = transactions_entry['Time'].max().date()    # Get the date part of the latest datetime
+
+    # Adjust the start date to be one day earlier at 22:00
+    start_date = earliest_datetime - datetime.timedelta(days=1)
+    start_time = datetime.time(22, 0, 0)  # 22:00 hours
+    start = datetime.datetime.combine(start_date, start_time)
+
+    # Adjust the end date to be the same day at 22:00 (no need to add a day as we want the same day's 22:00)
+    end_date = latest_datetime
+    end_time = datetime.time(22, 0, 0)  # 22:00 hours
+    end = datetime.datetime.combine(end_date, end_time)
+
+    # Calculate the total seconds between the start and end datetime
     total_seconds = int((end - start).total_seconds())
+
+    # Output start, end, and total_seconds for verification
+    print("Start:", start)
+    print("End:", end)
+    print("Total seconds:", total_seconds)
 
 
     print("opening time: ")
@@ -97,7 +119,7 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
 
         if freeze and time_hour >= freeze_time:
 
-            insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, start_again_checking_balance, end_again_checking_balance, queue_2 = FreezePart.freeze_participant(time_hour, freeze_part, freeze_time, insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, start_again_checking_balance, end_again_checking_balance, queue_2)
+            insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, queue_2 = FreezePart.freeze_participant(time_hour, freeze_part, freeze_time, insert_transactions, queue_1, start_validating, end_validating, start_matching, end_matching, start_checking_balance, end_checking_balance, queue_2)
         
         end_validating, start_validating, event_log = Validation.validating_duration(insert_transactions, start_validating, end_validating, time, event_log)
 
@@ -106,17 +128,17 @@ def simulator(opening_time, closing_time, recycling, credit_limit_percentage, fr
         end_matching, start_matching, event_log = MatchingMechanism.matching_duration(start_matching, end_matching, time, event_log)
         
         
-        if time_hour >= datetime.time(0,0,1) and time_hour < datetime.time(0,1,0): # Guarantee closed
+        if time_hour >= datetime.time(22,0,1) and time_hour < datetime.time(22,1,0): # Guarantee closed
             
             end_matching['SettlementDeadline'] = pd.to_datetime(end_matching['SettlementDeadline'])
-            end_matching_selected = end_matching[end_matching['SettlementDeadline'].dt.date.le(current_day)]
+            end_matching_selected = end_matching[(end_matching['SettlementDeadline'] - pd.Timedelta(days=1)).dt.date.le(current_day)]
             end_matching = end_matching.drop(end_matching_selected.index)
 
             cumulative_inserted = pd.concat([cumulative_inserted,end_matching_selected], ignore_index=True)
 
             end_matching_selected, start_checking_balance, end_checking_balance, queue_2,  settled_transactions, event_log = SettlementMechanism.settle(time, end_matching_selected, start_checking_balance, end_checking_balance, queue_2, settled_transactions, participants, event_log, modified_accounts) # Settle matched transactions
 
-            if time_hour == datetime.time(0,1,0):
+            if time_hour == datetime.time(22,1,0):
                 event_log, end_matching, start_checking_balance = ClearQueus.send_to_get_cleared(time, event_log, end_matching, start_checking_balance)
 
         if time_hour >= opening_time and time_hour < closing_time: # Guarantee closed

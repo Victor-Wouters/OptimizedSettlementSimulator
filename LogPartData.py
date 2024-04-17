@@ -18,6 +18,8 @@ def get_partacc_data(participants, transactions_entry):
     return balances_status
 
 def balances_history_calculations(balances_history, participants):
+
+    plt.rcParams['font.size'] = 15
      
     balances_history = balances_history.applymap(lambda x: int(x))
     balances_history.to_csv('balanceHistoryCSV\\BalanceHistory.csv', index=False, sep = ';')
@@ -31,17 +33,17 @@ def balances_history_calculations(balances_history, participants):
     max_credit = total_credit_dataframe.max().max()
     credit_plot = total_credit_dataframe.iloc[0]
     
-    plt.figure(figsize=(20, 9))
+    plt.figure(figsize=(15, 8))
     plt.plot(credit_plot.index, credit_plot.values)
-    plt.title('Total credit')
-    plt.xlabel('Time')
-    plt.ylabel('Value')
+    plt.title('Total Credit Over Time')
+    plt.xlabel('Time (15-minute intervals)')
+    plt.ylabel('Value (€)')
     #plt.xticks(rotation=90)
-    x_ticks = credit_plot.index[::8]
+    x_ticks = credit_plot.index[::24]
     plt.xticks(x_ticks, rotation=90)
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig(f'balanceHistoryPNG\\Total_credit.png')
+    plt.savefig(f'balanceHistoryPNG\\Total_credit.pdf')
     total_credit_dataframe.to_csv('balanceHistoryCSV\\Total_credit.csv', index=False, sep = ';')
     
     dfs = {part_id: group for part_id, group in balances_history.groupby('PartID')}
@@ -63,7 +65,7 @@ def balances_history_calculations(balances_history, participants):
 
 
         dataframe.set_index('Time', inplace=True)
-        plt.figure(figsize=(20, 9))
+        plt.figure(figsize=(15, 8))
         for column in dataframe.columns[:-1]:  # Exclude the last column which is 'credit limit'
             if column == 0:
                 plt.plot(dataframe.index, dataframe[column], label=f'Cash account')
@@ -71,16 +73,16 @@ def balances_history_calculations(balances_history, participants):
                 plt.plot(dataframe.index, dataframe[column], label=f'Security {column} account')
 
         plt.plot(dataframe.index, dataframe['Credit limit'], label='Credit Limit', linestyle='--')
-        plt.xlabel('Time')
-        plt.ylabel('Value')
+        plt.xlabel('Time (15-minute intervals)')
+        plt.ylabel('Value (€)')
         plt.title(f'Participant {part_id}: Account Values Over Time')
         #plt.xticks(rotation=90)
-        x_ticks = dataframe.index[::8]
+        x_ticks = dataframe.index[::24]
         plt.xticks(x_ticks, rotation=90)
         plt.grid(axis='y')
         plt.legend()
         #plt.grid(True)
         plt.tight_layout()
-        plt.savefig(f'balanceHistoryPNG\\BalanceHistoryPart{part_id}.png')
+        plt.savefig(f'balanceHistoryPNG\\BalanceHistoryPart{part_id}.pdf')
             
     return max_credit

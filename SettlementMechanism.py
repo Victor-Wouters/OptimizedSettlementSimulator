@@ -86,7 +86,7 @@ def keep_track_modified_accounts(instructions_for_processing, modified_accounts)
     return modified_accounts
 
 def atomic_retry_settle(time, start_checking_balance, queue_2, settled_transactions, event_log, modified_accounts, cumulative_inserted):
-
+    
     if not queue_2.empty:
         for key, account_list in modified_accounts.items():
             # Iterate through each account for the current participant (key)
@@ -107,6 +107,7 @@ def atomic_retry_settle(time, start_checking_balance, queue_2, settled_transacti
                     start_checking_balance = pd.concat([start_checking_balance, instructions_for_processing], ignore_index=True)
     
     cumulative_inserted = pd.concat([cumulative_inserted,start_checking_balance], ignore_index=True)
+    #cumulative_inserted = pd.concat([cumulative_inserted,queue_2], ignore_index=True)
     modified_accounts.clear()
     
     return start_checking_balance, queue_2, settled_transactions, event_log, cumulative_inserted
